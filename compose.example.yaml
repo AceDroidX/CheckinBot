@@ -1,0 +1,8 @@
+services:
+  server:
+    image: acedroidx/checkin-bot:latest
+    environment:
+      - TZ=Asia/Shanghai
+      - log_level=debug
+      - interval=60
+      - cookie=
