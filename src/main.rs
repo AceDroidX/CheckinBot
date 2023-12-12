@@ -49,26 +49,7 @@ async fn checkin_s1() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-#[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    dotenv().ok();
-    let config = ConfigBuilder::new()
-        .set_time_offset_to_local()
-        .unwrap()
-        .build();
-    let log_level = match env::var("log_level")
-        .unwrap_or("debug".to_string())
-        .as_str()
-    {
-        "off" => LevelFilter::Off,
-        "error" => LevelFilter::Error,
-        "warn" => LevelFilter::Warn,
-        "info" => LevelFilter::Info,
-        "debug" => LevelFilter::Debug,
-        "trace" => LevelFilter::Trace,
-        _ => LevelFilter::Debug,
-    };
-    TermLogger::init(log_level, config, TerminalMode::Mixed, ColorChoice::Auto).unwrap();
+async fn async_main() -> Result<(), Box<dyn std::error::Error>> {
     checkin_s1().await.expect("S1签到测试失败");
     let mut scheduler = AsyncScheduler::new();
     scheduler
@@ -102,4 +83,32 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     }
     Ok(())
+}
+
+fn main() {
+    dotenv().ok();
+    let config = ConfigBuilder::new()
+        .set_time_offset_to_local()
+        .unwrap()
+        .build();
+    let log_level = match env::var("log_level")
+        .unwrap_or("debug".to_string())
+        .as_str()
+    {
+        "off" => LevelFilter::Off,
+        "error" => LevelFilter::Error,
+        "warn" => LevelFilter::Warn,
+        "info" => LevelFilter::Info,
+        "debug" => LevelFilter::Debug,
+        "trace" => LevelFilter::Trace,
+        _ => LevelFilter::Debug,
+    };
+    TermLogger::init(log_level, config, TerminalMode::Mixed, ColorChoice::Auto).unwrap();
+    tokio::runtime::Builder::new_multi_thread()
+        .enable_all()
+        .build()
+        .unwrap()
+        .block_on(async {
+            let _ = async_main().await;
+        })
 }
