@@ -6,7 +6,7 @@ use regex::Regex;
 use reqwest::header;
 use simplelog::{ColorChoice, ConfigBuilder, TermLogger, TerminalMode};
 use std::env;
-use std::io::{self, Write};
+use std::io::{self, IsTerminal, Write};
 use std::time::Duration;
 
 async fn checkin_s1() -> Result<(), Box<dyn std::error::Error>> {
@@ -68,18 +68,25 @@ async fn async_main() -> Result<(), Box<dyn std::error::Error>> {
             tokio::time::sleep(Duration::from_millis(100)).await;
         }
     });
-    loop {
-        println!("CheckinBot v{}", env!("CARGO_PKG_VERSION"));
+    println!("CheckinBot v{}", env!("CARGO_PKG_VERSION"));
+    if io::stdin().is_terminal() {
         println!("Press 'q' to quit");
-        print!("> ");
-        io::stdout().flush().unwrap();
-        let mut buf = String::new();
-        io::stdin()
-            .read_line(&mut buf)
-            .expect("Failed to read line");
-        match buf.trim() {
-            "q" => break,
-            _ => continue,
+        loop {
+            print!("> ");
+            io::stdout().flush().unwrap();
+            let mut buf = String::new();
+            io::stdin()
+                .read_line(&mut buf)
+                .expect("Failed to read line");
+            match buf.trim() {
+                "q" => break,
+                _ => continue,
+            }
+        }
+    } else {
+        println!("Running in non-interactive mode");
+        loop {
+            tokio::time::sleep(Duration::from_millis(100)).await;
         }
     }
     Ok(())
