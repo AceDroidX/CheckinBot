@@ -1,6 +1,6 @@
 use clokwerk::{AsyncScheduler, TimeUnits};
 use dotenv::dotenv;
-use log::{debug, error, info, LevelFilter};
+use log::{debug, error, info, warn, LevelFilter};
 use rand::seq::SliceRandom;
 use regex::Regex;
 use reqwest::header;
@@ -45,6 +45,25 @@ async fn checkin_s1() -> Result<(), Box<dyn std::error::Error>> {
         }
     }
     info!("刷新成功 当前积分:{}", get_number(&resp).unwrap());
+    fn checkin_url(text: &str) -> Option<String> {
+        let re =
+            Regex::new(r"study_daily_attendance-daily_attendance\.html\?formhash=\w*").unwrap();
+        if let Some(captures) = re.captures(&text) {
+            Some("https://bbs.saraba1st.com/2b/".to_owned() + captures.get(0).unwrap().as_str())
+        } else {
+            None
+        }
+    }
+    if let Some(url) = checkin_url(&resp) {
+        let resp = client.get(url).send().await?.text().await?;
+        if resp.contains("签到成功") {
+            info!("签到成功");
+        } else if resp.contains("已签到,请不要重新签到！") {
+            warn!("今日已签到");
+        } else {
+            error!("签到未知错误");
+        }
+    }
     // println!("{:#?}", resp);
     Ok(())
 }
