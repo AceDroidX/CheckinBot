@@ -44,7 +44,11 @@ async fn checkin_s1() -> Result<(), Box<dyn std::error::Error>> {
             None
         }
     }
-    info!("刷新成功 当前积分:{}", get_number(&resp).unwrap());
+    if let Some(number) = get_number(&resp) {
+        info!("刷新成功 当前积分:{}", number);
+    } else {
+        warn!("刷新成功 当前积分获取失败")
+    }
     fn checkin_url(text: &str) -> Option<String> {
         let re =
             Regex::new(r"study_daily_attendance-daily_attendance\.html\?formhash=\w*").unwrap();
